@@ -53,13 +53,12 @@ resource "aws_codepipeline" "frontend" {
       name            = "Deploy"
       category        = "Deploy"
       owner           = "AWS"
-      provider        = "CodeDeploy"
+      provider        = "CodeBuild"
       input_artifacts = ["build_output"]
       version         = "1"
 
       configuration = {
-        ApplicationName     = var.codedeploy_app_name
-        DeploymentGroupName = var.codedeploy_deployment_group
+        ProjectName = aws_codebuild_project.frontend_build.name
       }
     }
   }
@@ -91,30 +90,30 @@ resource "aws_codebuild_project" "frontend_build" {
       name  = "ENVIRONMENT"
       value = var.environment
     }
-  environment_variable {
+    environment_variable {
       name  = "frontend_blue_target_group_name"
       value = var.frontend_blue_target_group_name
     }
-  environment_variable {
+    environment_variable {
       name  = "frontend_green_target_group_name"
       value = var.frontend_green_target_group_name
     }
-  environment_variable {
+    environment_variable {
       name  = "alb_listener_arn"
       value = var.alb_listener_arn
     }
-     environment_variable {
+    environment_variable {
       name  = "REACT_APP_BACKEND_URL"
       value = "http://${var.alb_dns_name}:8080"
-     } 
-     environment_variable {
+    }
+    environment_variable {
       name  = "task_definition"
       value = var.frontend_task_definition_arn
-}
+    }
   }
 
   source {
-    type      = "CODEPIPELINE"
+    type = "CODEPIPELINE"
     #buildspec = file("${path.module}/buildspec.yml")
   }
 
@@ -130,7 +129,7 @@ resource "aws_iam_role" "codepipeline_role" {
   name = "${var.project_name}-${var.environment}-frontend-pipeline-role"
 
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17",
+    Version = "2012-10-17",
     Statement = [
       {
         Effect    = "Allow",
@@ -148,8 +147,8 @@ resource "aws_iam_role_policy" "codepipeline_codestar_policy" {
     Version = "2012-10-17",
     Statement = [
       {
-        Effect = "Allow",
-        Action = ["codestar-connections:UseConnection"],
+        Effect   = "Allow",
+        Action   = ["codestar-connections:UseConnection"],
         Resource = var.codestar_connection_arn
       }
     ]
@@ -161,11 +160,11 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
   role = aws_iam_role.codepipeline_role.id
 
   policy = jsonencode({
-    Version   = "2012-10-17",
+    Version = "2012-10-17",
     Statement = [
       {
-        Effect   = "Allow",
-        Action   = [
+        Effect = "Allow",
+        Action = [
           "s3:GetObject",
           "s3:GetObjectVersion",
           "s3:GetBucketVersioning",
@@ -178,8 +177,8 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
         ]
       },
       {
-        Effect   = "Allow",
-        Action   = [
+        Effect = "Allow",
+        Action = [
           "codebuild:BatchGetBuilds",
           "codebuild:StartBuild"
         ],
@@ -187,31 +186,11 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
       },
       {
         Effect   = "Allow",
-        Action   = [
-          "codedeploy:CreateDeployment",
-          "codedeploy:GetApplication",
-          "codedeploy:GetApplicationRevision",
-          "codedeploy:GetDeployment",
-          "codedeploy:GetDeploymentConfig",
-          "codedeploy:RegisterApplicationRevision"
-        ],
-        Resource = ["*"]
-      },
-      {
-        Effect   = "Allow",
-        Action   = [
-          "ecs:DescribeServices",
-          "ecs:DescribeTaskDefinition"
-        ],
-        Resource = ["*"]
-      },
-      {
-        Effect = "Allow",
-        Action = ["iam:PassRole"],
+        Action   = ["iam:PassRole"],
         Resource = ["*"],
         Condition = {
           StringLike = {
-            "iam:PassedToService" = "ecs-tasks.amazonaws.com"
+            "iam:PassedToService" = "codebuild.amazonaws.com"
           }
         }
       }
@@ -224,7 +203,7 @@ resource "aws_iam_role" "codebuild_role" {
   name = "${var.project_name}-${var.environment}-frontend-codebuild-role"
 
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17",
+    Version = "2012-10-17",
     Statement = [
       {
         Effect    = "Allow",
@@ -240,11 +219,11 @@ resource "aws_iam_role_policy" "codebuild_policy" {
   role = aws_iam_role.codebuild_role.id
 
   policy = jsonencode({
-    Version   = "2012-10-17",
+    Version = "2012-10-17",
     Statement = [
       {
-        Effect   = "Allow",
-        Action   = [
+        Effect = "Allow",
+        Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents"
@@ -252,8 +231,8 @@ resource "aws_iam_role_policy" "codebuild_policy" {
         Resource = ["*"]
       },
       {
-        Effect   = "Allow",
-        Action   = [
+        Effect = "Allow",
+        Action = [
           "s3:GetObject",
           "s3:GetObjectVersion",
           "s3:PutObject"
@@ -264,8 +243,8 @@ resource "aws_iam_role_policy" "codebuild_policy" {
         ]
       },
       {
-        Effect   = "Allow",
-        Action   = [
+        Effect = "Allow",
+        Action = [
           "ecr:GetAuthorizationToken",
           "ecr:BatchCheckLayerAvailability",
           "ecr:GetDownloadUrlForLayer",

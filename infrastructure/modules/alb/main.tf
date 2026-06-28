@@ -1,4 +1,4 @@
-# Corrected ALB Configuration for Blue/Green Deployment (Let CodeDeploy Handle Switching)
+# ALB configuration for the application ingress layer.
 
 resource "aws_lb" "main" {
   name               = "${var.environment}-alb"
@@ -109,9 +109,9 @@ resource "aws_lb_listener_rule" "backend" {
       values = ["/api/*"]
     }
   }
-lifecycle {
+  lifecycle {
     ignore_changes = [
-    action
+      action
     ]
   }
 }
@@ -130,14 +130,14 @@ lifecycle {
 }
 */
 
-# Blue/Green Target Groups (managed by CodeDeploy)
+# Blue/Green target groups used by the application deployment flow.
 
 resource "aws_lb_target_group" "frontend_blue" {
   name        = "${var.environment}-frontend-blue-tg"
   port        = 3000
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
-  target_type = "ip"
+  target_type = "instance"
 
   health_check {
     path                = "/index.html"
@@ -158,7 +158,7 @@ resource "aws_lb_target_group" "frontend_green" {
   port        = 3000
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
-  target_type = "ip"
+  target_type = "instance"
 
   health_check {
     path                = "/index.html"
@@ -180,7 +180,7 @@ resource "aws_lb_target_group" "backend_blue" {
   port        = 8080
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
-  target_type = "ip"
+  target_type = "instance"
 
   health_check {
     path                = "/login"
@@ -201,7 +201,7 @@ resource "aws_lb_target_group" "backend_green" {
   port        = 8080
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
-  target_type = "ip"
+  target_type = "instance"
 
   health_check {
     path                = "/login"

@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
     bucket  = "mystatetestfile"
-    key     = "dev/terraform.tfstate"
+    key     = "eks/dev/terraform.tfstate"
     region  = "us-east-1"
     profile = "harips"
     encrypt = true

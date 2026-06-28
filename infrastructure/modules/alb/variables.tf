@@ -1,31 +1,31 @@
 variable "environment" {
-description = "Deployment environment"
-type = string
+  description = "Deployment environment"
+  type        = string
 }
 
 variable "vpc_id" {
-description = "VPC ID"
-type = string
+  description = "VPC ID"
+  type        = string
 }
 
 variable "public_subnet_ids" {
-description = "List of public subnet IDs"
-type = list(string)
+  description = "List of public subnet IDs"
+  type        = list(string)
 }
 
 variable "alb_security_group_id" {
-description = "Security group ID for ALB"
-type = string
+  description = "Security group ID for ALB"
+  type        = string
 }
 
 variable "domain_name" {
-description = "Domain name for the application"
-type = string
+  description = "Domain name for the application"
+  type        = string
 }
 
 variable "acm_certificate_arn" {
-description = "ACM certificate ARN"
-type = string
+  description = "ACM certificate ARN"
+  type        = string
 }
 
 /*variable "route53_zone_id" {

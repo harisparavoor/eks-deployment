@@ -1,44 +1,47 @@
 variable "environment" {
-description = "Deployment environment"
-type = string
+  description = "Deployment environment"
+  type        = string
 }
 
 variable "project_name" {
-description = "Name of the project"
-type = string
+  description = "Name of the project"
+  type        = string
 }
 
 variable "db_endpoint" {
-description = "Database endpoint"
-type = string
+  description = "Database endpoint"
+  type        = string
 }
 
 variable "db_name" {
-description = "Database name"
-type = string
+  description = "Database name"
+  type        = string
 }
 
 variable "db_username" {
-description = "Database username"
-type = string
+  description = "Database username"
+  type        = string
 }
 
 variable "db_password" {
-description = "Database password"
-type = string
-sensitive = true
-}
-variable "ecs_task_role_name" {
-  description = "Name of the ECS task role to attach the policy to"
+  description = "Database password"
   type        = string
+  sensitive   = true
+}
+variable "workload_role_name" {
+  description = "Name of the workload role to attach the policy to"
+  type        = string
+  default     = ""
 }
 
-variable "ecs_task_role" {
-  description = "Reference to the ECS task role resource"
+variable "workload_role" {
+  description = "Reference to the workload role resource"
   type        = any
+  default     = null
 }
 
-variable "ecs_task_execution_role_name" {
-  description = "Name of the ECS task execution_role.name"
+variable "workload_execution_role_name" {
+  description = "Name of the execution role name"
   type        = string
+  default     = ""
 }

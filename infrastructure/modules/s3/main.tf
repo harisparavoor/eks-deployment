@@ -50,9 +50,9 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "artifacts" {
 */
 # Logs Bucket
 resource "aws_s3_bucket" "logs" {
-  bucket = "${var.project_name}-${var.environment}-logs"
+  bucket        = "${var.project_name}-${var.environment}-logs"
   force_destroy = true
-  }
+}
 
 /*resource "aws_s3_bucket_acl" "logs" {
   bucket = aws_s3_bucket.logs.id
@@ -181,12 +181,12 @@ data "aws_elb_service_account" "main" {}
 
 data "aws_iam_policy_document" "combined_policy" {
   statement {
-    effect    = "Deny"
+    effect = "Deny"
     principals {
       type        = "AWS"
       identifiers = ["*"]
     }
-    actions   = ["s3:*"]
+    actions = ["s3:*"]
     resources = [
       aws_s3_bucket.logs.arn,
       "${aws_s3_bucket.logs.arn}/*",
@@ -199,7 +199,7 @@ data "aws_iam_policy_document" "combined_policy" {
   }
 
   statement {
-    effect    = "Allow"
+    effect = "Allow"
     principals {
       type        = "AWS"
       identifiers = [data.aws_elb_service_account.main.arn]
@@ -209,7 +209,7 @@ data "aws_iam_policy_document" "combined_policy" {
   }
 
   statement {
-    effect    = "Allow"
+    effect = "Allow"
     principals {
       type        = "Service"
       identifiers = ["delivery.logs.amazonaws.com"]
@@ -224,7 +224,7 @@ data "aws_iam_policy_document" "combined_policy" {
   }
 
   statement {
-    effect    = "Allow"
+    effect = "Allow"
     principals {
       type        = "Service"
       identifiers = ["delivery.logs.amazonaws.com"]

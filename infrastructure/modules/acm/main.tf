@@ -42,7 +42,7 @@ resource "tls_self_signed_cert" "apptest_com" {
     organization = "Test Org"
   }
 
-  validity_period_hours = 720  # 30 days
+  validity_period_hours = 720 # 30 days
 
   allowed_uses = [
     "key_encipherment",

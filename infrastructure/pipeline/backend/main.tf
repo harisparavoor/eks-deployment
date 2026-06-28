@@ -52,13 +52,12 @@ resource "aws_codepipeline" "backend" {
       name            = "Deploy"
       category        = "Deploy"
       owner           = "AWS"
-      provider        = "CodeDeploy"
+      provider        = "CodeBuild"
       input_artifacts = ["build_output"]
       version         = "1"
 
       configuration = {
-        ApplicationName     = var.codedeploy_app_name
-        DeploymentGroupName = var.codedeploy_deployment_group
+        ProjectName = aws_codebuild_project.backend_build.name
       }
     }
   }
@@ -66,10 +65,10 @@ resource "aws_codepipeline" "backend" {
 
 # CodeBuild Project
 resource "aws_codebuild_project" "backend_build" {
-  name           = "${var.project_name}-${var.environment}-backend-build"
-  description    = "Backend build project"
-  build_timeout  = "10"
-  service_role   = aws_iam_role.codebuild_role.arn
+  name          = "${var.project_name}-${var.environment}-backend-build"
+  description   = "Backend build project"
+  build_timeout = "10"
+  service_role  = aws_iam_role.codebuild_role.arn
 
   artifacts {
     type = "CODEPIPELINE"
@@ -91,27 +90,27 @@ resource "aws_codebuild_project" "backend_build" {
       name  = "ENVIRONMENT"
       value = var.environment
     }
-     environment_variable {
+    environment_variable {
       name  = "backend_blue_target_group_name"
       value = var.backend_blue_target_group_name
     }
-  environment_variable {
+    environment_variable {
       name  = "backend_green_target_group_name"
       value = var.backend_green_target_group_name
     }
-  environment_variable {
+    environment_variable {
       name  = "alb_listener_arn"
       value = var.alb_listener_arn
-  }
-  environment_variable {
+    }
+    environment_variable {
       name  = "task_definition"
       value = var.backend_task_definition_arn
-  }
-  
+    }
+
   }
 
   source {
-    type      = "CODEPIPELINE"
+    type = "CODEPIPELINE"
     #buildspec = file("${path.module}/buildspec.yml")
   }
 
@@ -130,7 +129,7 @@ resource "aws_iam_role" "codepipeline_role" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
+        Effect    = "Allow"
         Principal = { Service = "codepipeline.amazonaws.com" }
         Action    = "sts:AssumeRole"
       }
@@ -145,8 +144,8 @@ resource "aws_iam_role_policy" "codepipeline_codestar_policy" {
     Version = "2012-10-17",
     Statement = [
       {
-        Effect = "Allow",
-        Action = ["codestar-connections:UseConnection"],
+        Effect   = "Allow",
+        Action   = ["codestar-connections:UseConnection"],
         Resource = var.codestar_connection_arn
       }
     ]
@@ -160,16 +159,16 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = [
-        "s3:GetObject", 
-        "s3:GetObjectVersion", 
-        "s3:GetBucketVersioning",
-        "s3:PutObjectAcl", 
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:GetObjectVersion",
+          "s3:GetBucketVersioning",
+          "s3:PutObjectAcl",
         "s3:PutObject"]
         Resource = [
           var.artifacts_bucket_arn,
-          "${var.artifacts_bucket_arn}/*"]
+        "${var.artifacts_bucket_arn}/*"]
       },
       {
         Effect   = "Allow"
@@ -178,25 +177,11 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
       },
       {
         Effect   = "Allow"
-        Action   = [
-        "codedeploy:CreateDeployment", 
-        "codedeploy:GetApplication", "codedeploy:GetApplicationRevision",
-        "codedeploy:GetDeployment", "codedeploy:GetDeploymentConfig",
-        "codedeploy:RegisterApplicationRevision"]
-        Resource = ["*"]
-      },
-      {
-        Effect   = "Allow"
-        Action   = ["ecs:DescribeServices", "ecs:DescribeTaskDefinition"]
-        Resource = ["*"]
-      },
-      {
-        Effect = "Allow"
-        Action = ["iam:PassRole"]
+        Action   = ["iam:PassRole"]
         Resource = ["*"]
         Condition = {
           StringLike = {
-            "iam:PassedToService" = "ecs-tasks.amazonaws.com"
+            "iam:PassedToService" = "codebuild.amazonaws.com"
           }
         }
       }
@@ -212,7 +197,7 @@ resource "aws_iam_role" "codebuild_role" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
+        Effect    = "Allow"
         Principal = { Service = "codebuild.amazonaws.com" }
         Action    = "sts:AssumeRole"
       }
@@ -233,11 +218,11 @@ resource "aws_iam_role_policy" "codebuild_policy" {
         Resource = ["*"]
       },
       {
-        Effect   = "Allow"
-        Action   = ["s3:GetObject", "s3:GetObjectVersion", "s3:PutObject"]
+        Effect = "Allow"
+        Action = ["s3:GetObject", "s3:GetObjectVersion", "s3:PutObject"]
         Resource = [
           var.artifacts_bucket_arn,
-          "${var.artifacts_bucket_arn}/*"]
+        "${var.artifacts_bucket_arn}/*"]
       },
       {
         Effect   = "Allow"
