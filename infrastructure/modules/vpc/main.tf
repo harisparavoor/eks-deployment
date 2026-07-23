@@ -25,6 +25,11 @@ resource "aws_subnet" "public" {
 
   tags = {
     Name = "${var.project_name}-${var.environment}-public-${count.index + 1}"
+
+    # REQUIRED FOR EKS + internet ALB
+    "kubernetes.io/cluster/${var.project_name}-${var.environment}-eks" = "shared"
+    "kubernetes.io/role/elb"                                           = "1"
+
   }
 }
 
@@ -37,6 +42,10 @@ resource "aws_subnet" "private" {
 
   tags = {
     Name = "${var.project_name}-${var.environment}-private-${count.index + 1}"
+
+    # REQUIRED FOR EKS + INTERNAL ALB
+    "kubernetes.io/cluster/${var.project_name}-${var.environment}-eks" = "shared"
+    "kubernetes.io/role/internal-elb"                                  = "1"
   }
 }
 
@@ -127,6 +136,7 @@ resource "aws_route_table" "private" {
   }
 }
 resource "aws_route_table_association" "private" {
+
   count = 3
 
   subnet_id      = aws_subnet.private[count.index].id
@@ -165,7 +175,7 @@ resource "aws_security_group" "alb" {
 }
 
 resource "aws_security_group" "eks" {
-  name        = "${var.project_name}-${var.environment}-eks-sg"
+  name        = "${var.project_name}-${var.environment}-worker-nodes-sg"
   description = "Security group for EKS worker nodes"
   vpc_id      = aws_vpc.main.id
 
@@ -184,8 +194,52 @@ resource "aws_security_group" "eks" {
   }
 
   tags = {
-    Name = "${var.project_name}-${var.environment}-eks-sg"
+    Name = "${var.project_name}-${var.environment}-worker-nodes-sg"
   }
+}
+
+resource "aws_security_group" "alb_to_pods" {
+  name        = "${var.project_name}-${var.environment}-alb-to-pods-sg"
+  vpc_id      = aws_vpc.main.id
+  description = "Allow ALB target group health checks and traffic to pods"
+
+  ingress {
+    from_port       = 8080
+    to_port         = 8080
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id] # or the ALB's SG ID directly
+  }
+  ingress {
+    from_port       = 3000
+    to_port         = 3000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-alb-to-pods-sg"
+  }
+}
+
+# --- This is the piece that actually fixes ALB → pod connectivity ---
+resource "aws_security_group_rule" "alb_to_backend_pods" {
+  type                     = "ingress"
+  from_port                = 8080
+  to_port                  = 8080
+  protocol                 = "tcp"
+  security_group_id        = var.eks_cluster_sg_id
+  source_security_group_id = aws_security_group.alb.id
+  description              = "Allow ALB health checks/traffic to backend pods"
+}
+
+resource "aws_security_group_rule" "alb_to_frontend_pods" {
+  type                     = "ingress"
+  from_port                = 3000
+  to_port                  = 3000
+  protocol                 = "tcp"
+  security_group_id        = var.eks_cluster_sg_id
+  source_security_group_id = aws_security_group.alb.id
+  description              = "Allow ALB health checks/traffic to frontend pods"
 }
 
 resource "aws_security_group" "rds" {

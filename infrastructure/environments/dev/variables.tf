@@ -53,9 +53,17 @@ variable "github_repo_frontend" {
   description = "GitHub repository name for frontend"
   type        = string
 }
+variable "frontend_appname" {
+  description = "Name of the frontend application"
+  type        = string
+}
 
 variable "github_repo_backend" {
   description = "GitHub repository name for backend"
+  type        = string
+}
+variable "backend_appname" {
+  description = "Name of the backend application"
   type        = string
 }
 

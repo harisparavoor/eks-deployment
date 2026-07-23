@@ -1,7 +1,8 @@
 # CodePipeline for Frontend using GitHub V2
 resource "aws_codepipeline" "frontend" {
-  name     = "${var.project_name}-${var.environment}-frontend-pipeline"
-  role_arn = aws_iam_role.codepipeline_role.arn
+  name          = "${var.project_name}-${var.environment}-frontend-pipeline"
+  role_arn      = aws_iam_role.codepipeline_role.arn
+  pipeline_type = "V2"
 
   artifact_store {
     location = var.artifacts_bucket_name
@@ -23,7 +24,7 @@ resource "aws_codepipeline" "frontend" {
         ConnectionArn    = var.codestar_connection_arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo_frontend}"
         BranchName       = var.github_branch
-        DetectChanges    = "true"
+        #DetectChanges    = "false"
       }
     }
   }
@@ -46,22 +47,6 @@ resource "aws_codepipeline" "frontend" {
     }
   }
 
-  stage {
-    name = "Deploy"
-
-    action {
-      name            = "Deploy"
-      category        = "Deploy"
-      owner           = "AWS"
-      provider        = "CodeBuild"
-      input_artifacts = ["build_output"]
-      version         = "1"
-
-      configuration = {
-        ProjectName = aws_codebuild_project.frontend_build.name
-      }
-    }
-  }
 }
 
 # CodeBuild for Frontend
@@ -77,7 +62,7 @@ resource "aws_codebuild_project" "frontend_build" {
 
   environment {
     compute_type                = "BUILD_GENERAL1_SMALL"
-    image                       = "aws/codebuild/standard:5.0"
+    image                       = "aws/codebuild/standard:7.0"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
     privileged_mode             = true
@@ -87,9 +72,29 @@ resource "aws_codebuild_project" "frontend_build" {
       value = var.ecr_repository_url
     }
     environment_variable {
+      name  = "FRONTEND_APP"
+      value = var.frontend_appname
+    }
+
+    environment_variable {
+      name  = "FRONTEND_TG_ARN"
+      value = var.frontend_target_group_arn
+    }
+
+    environment_variable {
+      name  = "CLUSTER_NAME"
+      value = var.cluster_name
+    }
+    environment_variable {
+      name  = "NAMESPACE"
+      value = "default"
+    }
+
+    environment_variable {
       name  = "ENVIRONMENT"
       value = var.environment
     }
+    /*
     environment_variable {
       name  = "frontend_blue_target_group_name"
       value = var.frontend_blue_target_group_name
@@ -102,13 +107,10 @@ resource "aws_codebuild_project" "frontend_build" {
       name  = "alb_listener_arn"
       value = var.alb_listener_arn
     }
+    */
     environment_variable {
       name  = "REACT_APP_BACKEND_URL"
-      value = "http://${var.alb_dns_name}:8080"
-    }
-    environment_variable {
-      name  = "task_definition"
-      value = var.frontend_task_definition_arn
+      value = var.backend_appname
     }
   }
 
@@ -262,9 +264,32 @@ resource "aws_iam_role_policy" "codebuild_policy" {
       },
       {
         Effect   = "Allow",
+        Action   = ["eks:DescribeCluster"],
+        Resource = ["*"]
+      },
+      {
+        Effect   = "Allow",
         Action   = ["secretsmanager:GetSecretValue"],
         Resource = ["*"]
       }
     ]
   })
+}
+
+resource "aws_eks_access_entry" "codebuild" {
+  cluster_name  = var.cluster_name
+  principal_arn = aws_iam_role.codebuild_role.arn
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "codebuild_cluster_admin" {
+  cluster_name  = var.cluster_name
+  principal_arn = aws_iam_role.codebuild_role.arn
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+
+  access_scope {
+    type = "cluster"
+  }
+
+  depends_on = [aws_eks_access_entry.codebuild]
 }

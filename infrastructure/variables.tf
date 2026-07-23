@@ -55,6 +55,14 @@ variable "github_repo_frontend" {
   type        = string
 }
 
+variable "frontend_appname" {
+  description = "Name of the frontend application"
+  type        = string
+}
+variable "backend_appname" {
+  description = "Name of the backend application"
+  type        = string
+}
 variable "github_repo_backend" {
   description = "GitHub repository name for backend"
   type        = string
@@ -87,7 +95,10 @@ variable "alb_logs_policy" {
   type        = any
 }
 */
+
 variable "codestar_connection_arn" {
   description = "The ARN of the CodeStar connection"
   type        = string
 }
+
+

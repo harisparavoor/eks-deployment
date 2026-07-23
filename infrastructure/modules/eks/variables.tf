@@ -17,6 +17,10 @@ variable "eks_security_group_id" {
   description = "Security group ID for EKS cluster and nodes"
   type        = string
 }
+variable "alb_to_pods_security_group_id" {
+  description = "Security group ID for EKS cluster,pods and nodes"
+  type        = string
+}
 
 variable "node_instance_type" {
   description = "EC2 instance type for EKS worker nodes"

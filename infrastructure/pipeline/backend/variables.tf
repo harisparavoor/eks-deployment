@@ -29,6 +29,15 @@ variable "github_repo_backend" {
   type        = string
 }
 
+variable "backend_appname" {
+  description = "Name of the backend application"
+  type        = string
+}
+
+variable "frontend_appname" {
+  description = "Name of the frontend application"
+  type        = string
+}
 variable "github_branch" {
   description = "GitHub branch to trigger pipeline"
   type        = string
@@ -55,6 +64,33 @@ variable "codestar_connection_arn" {
   description = "The ARN of the CodeStar connection"
   type        = string
 }
+
+variable "cluster_name" {
+  description = "Name of the EKS cluster targeted by CodeBuild deployments"
+  type        = string
+}
+
+variable "backend_target_group_arn" {
+  description = "The ARN of the backend Target Group"
+  type        = string
+}
+variable "vpc_id" {
+  description = "The ID of the VPC"
+  type        = string
+}
+variable "private_subnet_ids" {
+  description = "The IDs of the private subnets"
+  type        = list(string)
+}
+variable "aws_region" {
+  description = "The AWS region"
+  type        = string
+}
+variable "alb_controller_role_arn" {
+  description = "The ARN of the ALB controller role"
+  type        = string
+}
+/*
 variable "backend_blue_target_group_name" {
   description = "Name of blue target group for backend"
   type        = string
@@ -68,9 +104,4 @@ variable "alb_listener_arn" {
   description = "ARN of the ALB listener"
   type        = string
 }
-
-variable "backend_task_definition_arn" {
-  description = "ARN of the backend task definition"
-  type        = string
-  default     = ""
-}
+*/

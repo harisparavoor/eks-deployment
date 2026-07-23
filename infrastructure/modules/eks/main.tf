@@ -1,6 +1,9 @@
+# eks.tf
+
 resource "aws_eks_cluster" "main" {
   name     = "${var.project_name}-${var.environment}-eks"
   role_arn = aws_iam_role.cluster.arn
+  #version  = var.eks_version
 
   vpc_config {
     subnet_ids              = var.private_subnet_ids
@@ -9,24 +12,87 @@ resource "aws_eks_cluster" "main" {
     security_group_ids      = [var.eks_security_group_id]
   }
 
+  access_config {
+    authentication_mode                         = "API_AND_CONFIG_MAP"
+    bootstrap_cluster_creator_admin_permissions = true
+  }
+
+  tags = {
+    Name        = "${var.project_name}-${var.environment}-eks"
+    Environment = var.environment
+    Project     = var.project_name
+    ManagedBy   = "Terraform"
+  }
+
   depends_on = [
     aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy,
     aws_iam_role_policy_attachment.cluster_AmazonEKSVPCResourceController,
   ]
 }
+/*
+resource "aws_launch_template" "main" {
+  name_prefix = "${var.project_name}-${var.environment}-ng-"
+
+  network_interfaces {
+    security_groups = [var.eks_security_group_id, var.alb_to_pods_security_group_id]
+  }
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name        = "${var.project_name}-${var.environment}-ng"
+      Environment = var.environment
+      Project     = var.project_name
+      ManagedBy   = "Terraform"
+    }
+  }
+}
+*/
 
 resource "aws_eks_node_group" "main" {
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "${var.project_name}-${var.environment}-ng"
   node_role_arn   = aws_iam_role.node_group.arn
   subnet_ids      = var.private_subnet_ids
+
+
+
+  #ami_type      = var.node_ami_type != "" ? var.node_ami_type : "AL2_x86_64"
+  #capacity_type = "ON_DEMAND"
+  #disk_size     = var.node_disk_size != 0 ? var.node_disk_size : 20
+
   scaling_config {
     desired_size = var.environment == "prod" ? 3 : 1
     max_size     = var.environment == "prod" ? 5 : 2
     min_size     = 1
+
+  }
+  instance_types = [var.node_instance_type]
+
+  /*launch_template {
+    id      = aws_launch_template.main.id
+    version = aws_launch_template.main.latest_version
+  }*/
+
+
+
+  update_config {
+    max_unavailable = 1
   }
 
-  instance_types = [var.node_instance_type]
+
+  labels = {
+    Environment = var.environment
+    Project     = var.project_name
+    NodeGroup   = "main"
+  }
+
+  tags = {
+    Name        = "${var.project_name}-${var.environment}-ng"
+    Environment = var.environment
+    Project     = var.project_name
+    ManagedBy   = "Terraform"
+  }
 
   depends_on = [
     aws_iam_role_policy_attachment.node_group_AmazonEKSWorkerNodePolicy,
@@ -34,6 +100,7 @@ resource "aws_eks_node_group" "main" {
     aws_iam_role_policy_attachment.node_group_AmazonEC2ContainerRegistryReadOnly,
   ]
 }
+
 
 resource "aws_iam_role" "cluster" {
   name = "${var.project_name}-${var.environment}-eks-cluster-role"
@@ -48,6 +115,12 @@ resource "aws_iam_role" "cluster" {
       Action = "sts:AssumeRole"
     }]
   })
+
+  tags = {
+    Name        = "${var.project_name}-${var.environment}-eks-cluster-role"
+    Environment = var.environment
+    Project     = var.project_name
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSClusterPolicy" {
@@ -73,6 +146,12 @@ resource "aws_iam_role" "node_group" {
       Action = "sts:AssumeRole"
     }]
   })
+
+  tags = {
+    Name        = "${var.project_name}-${var.environment}-eks-node-role"
+    Environment = var.environment
+    Project     = var.project_name
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "node_group_AmazonEKSWorkerNodePolicy" {
@@ -88,4 +167,41 @@ resource "aws_iam_role_policy_attachment" "node_group_AmazonEKS_CNI_Policy" {
 resource "aws_iam_role_policy_attachment" "node_group_AmazonEC2ContainerRegistryReadOnly" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
   role       = aws_iam_role.node_group.name
+}
+
+
+data "aws_eks_cluster" "eks" {
+  name = aws_eks_cluster.main.name
+}
+
+data "aws_eks_cluster_auth" "eks" {
+  name = data.aws_eks_cluster.eks.name
+}
+
+##########################################
+# TLS Certificate (OIDC)
+##########################################
+
+data "tls_certificate" "eks" {
+  url = data.aws_eks_cluster.eks.identity[0].oidc[0].issuer
+}
+
+##########################################
+# OIDC Provider (IRSA)
+##########################################
+
+resource "aws_iam_openid_connect_provider" "eks" {
+  url = data.aws_eks_cluster.eks.identity[0].oidc[0].issuer
+
+  client_id_list = ["sts.amazonaws.com"]
+
+  thumbprint_list = [
+    data.tls_certificate.eks.certificates[0].sha1_fingerprint
+  ]
+
+  tags = {
+    Name        = "${var.project_name}-${var.environment}-oidc"
+    Environment = var.environment
+    Project     = var.project_name
+  }
 }

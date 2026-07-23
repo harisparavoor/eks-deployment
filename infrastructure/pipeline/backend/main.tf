@@ -1,6 +1,7 @@
 resource "aws_codepipeline" "backend" {
-  name     = "${var.project_name}-${var.environment}-backend-pipeline"
-  role_arn = aws_iam_role.codepipeline_role.arn
+  name          = "${var.project_name}-${var.environment}-backend-pipeline"
+  role_arn      = aws_iam_role.codepipeline_role.arn
+  pipeline_type = "V2"
 
   artifact_store {
     location = var.artifacts_bucket_name
@@ -22,7 +23,7 @@ resource "aws_codepipeline" "backend" {
         ConnectionArn    = var.codestar_connection_arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo_backend}"
         BranchName       = var.github_branch
-        DetectChanges    = "true"
+        #DetectChanges    = "false"
       }
     }
   }
@@ -45,22 +46,20 @@ resource "aws_codepipeline" "backend" {
     }
   }
 
-  stage {
-    name = "Deploy"
+  trigger {
+    provider_type = "CodeStarSourceConnection"
 
-    action {
-      name            = "Deploy"
-      category        = "Deploy"
-      owner           = "AWS"
-      provider        = "CodeBuild"
-      input_artifacts = ["build_output"]
-      version         = "1"
+    git_configuration {
+      source_action_name = "Source"
 
-      configuration = {
-        ProjectName = aws_codebuild_project.backend_build.name
+      push {
+        branches {
+          includes = [var.github_branch]
+        }
       }
     }
   }
+
 }
 
 # CodeBuild Project
@@ -85,15 +84,57 @@ resource "aws_codebuild_project" "backend_build" {
       name  = "REPOSITORY_URI"
       value = var.ecr_repository_url
     }
+    environment_variable {
+      name  = "Backend_App"
+      value = var.backend_appname
+    }
+    environment_variable {
+      name  = "Frontend_App"
+      value = var.frontend_appname
+    }
+    environment_variable {
+      name  = "Backend_app_tg_arn"
+      value = var.backend_target_group_arn
+    }
+    environment_variable {
+      name  = "VPC_ID"
+      value = var.vpc_id
+    }
 
+    environment_variable {
+      name  = "SUBNET_IDS"
+      value = var.private_subnet_ids != null ? join(",", var.private_subnet_ids) : ""
+    }
+    environment_variable {
+      name  = "AWS_REGION"
+      value = var.aws_region
+    }
+
+    environment_variable {
+      name  = "ALB_CONTROLLER_ROLE_ARN"
+      value = var.alb_controller_role_arn
+    }
+    environment_variable {
+      name  = "CLUSTER_NAME"
+      value = var.cluster_name
+    }
+
+
+    environment_variable {
+      name  = "NAMESPACE"
+      value = "default"
+    }
     environment_variable {
       name  = "ENVIRONMENT"
       value = var.environment
     }
+    /*
     environment_variable {
       name  = "backend_blue_target_group_name"
       value = var.backend_blue_target_group_name
     }
+    */
+    /*
     environment_variable {
       name  = "backend_green_target_group_name"
       value = var.backend_green_target_group_name
@@ -101,12 +142,7 @@ resource "aws_codebuild_project" "backend_build" {
     environment_variable {
       name  = "alb_listener_arn"
       value = var.alb_listener_arn
-    }
-    environment_variable {
-      name  = "task_definition"
-      value = var.backend_task_definition_arn
-    }
-
+    }*/
   }
 
   source {
@@ -233,7 +269,30 @@ resource "aws_iam_role_policy" "codebuild_policy" {
         Effect   = "Allow"
         Action   = ["secretsmanager:GetSecretValue"]
         Resource = ["*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["eks:DescribeCluster"]
+        Resource = ["*"]
       }
     ]
   })
+}
+
+resource "aws_eks_access_entry" "codebuild" {
+  cluster_name  = var.cluster_name
+  principal_arn = aws_iam_role.codebuild_role.arn
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "codebuild_cluster_admin" {
+  cluster_name  = var.cluster_name
+  principal_arn = aws_iam_role.codebuild_role.arn
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+
+  access_scope {
+    type = "cluster"
+  }
+
+  depends_on = [aws_eks_access_entry.codebuild]
 }

@@ -12,7 +12,9 @@ module "infrastructure" {
   route53_zone_id         = var.route53_zone_id
   github_owner            = var.github_owner
   github_repo_frontend    = var.github_repo_frontend
+  frontend_appname        = var.frontend_appname
   github_repo_backend     = var.github_repo_backend
+  backend_appname         = var.backend_appname
   github_branch           = var.github_branch
   github_token            = var.github_token
   github_webhook_token    = var.github_webhook_token

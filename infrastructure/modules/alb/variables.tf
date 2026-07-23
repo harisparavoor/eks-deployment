@@ -2,7 +2,14 @@ variable "environment" {
   description = "Deployment environment"
   type        = string
 }
-
+variable "project_name" {
+  description = "Name of the project"
+  type        = string
+}
+variable "aws_region" {
+  description = "AWS region to deploy resources"
+  type        = string
+}
 variable "vpc_id" {
   description = "VPC ID"
   type        = string
@@ -41,4 +48,12 @@ variable "logs_bucket_name" {
 variable "alb_logs_policy" {
   description = "Reference to the S3 bucket policy resource"
   type        = any
+}
+variable "oidc_provider_arn" {
+  description = "ARN of the OIDC provider from EKS module"
+  type        = string
+}
+variable "oidc_issuer_url" {
+  description = "OIDC issuer URL from EKS module"
+  type        = string
 }

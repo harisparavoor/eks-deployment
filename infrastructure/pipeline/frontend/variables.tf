@@ -29,6 +29,15 @@ variable "github_repo_frontend" {
   description = "GitHub repository name for frontend"
   type        = string
 }
+variable "frontend_appname" {
+  description = "Name of the frontend application"
+  type        = string
+}
+
+variable "backend_appname" {
+  description = "Name of the backend application"
+  type        = string
+}
 
 variable "github_branch" {
   description = "GitHub branch to trigger pipeline"
@@ -57,6 +66,16 @@ variable "codestar_connection_arn" {
   type        = string
 }
 
+variable "cluster_name" {
+  description = "Name of the EKS cluster targeted by CodeBuild deployments"
+  type        = string
+}
+
+variable "frontend_target_group_arn" {
+  description = "The ARN of the frontend Target Group"
+  type        = string
+}
+/*
 variable "frontend_blue_target_group_name" {
   description = "Name of blue target group for frontend"
   type        = string
@@ -70,13 +89,8 @@ variable "alb_listener_arn" {
   description = "ARN of the ALB listener"
   type        = string
 }
-variable "frontend_task_definition_arn" {
-  description = "ARN of the frontend task definition"
-  type        = string
-  default     = ""
-}
-
 variable "alb_dns_name" {
   description = "DNS name of the ALB"
   type        = string
 }
+*/
