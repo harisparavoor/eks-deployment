@@ -94,20 +94,7 @@ resource "aws_codebuild_project" "frontend_build" {
       name  = "ENVIRONMENT"
       value = var.environment
     }
-    /*
-    environment_variable {
-      name  = "frontend_blue_target_group_name"
-      value = var.frontend_blue_target_group_name
-    }
-    environment_variable {
-      name  = "frontend_green_target_group_name"
-      value = var.frontend_green_target_group_name
-    }
-    environment_variable {
-      name  = "alb_listener_arn"
-      value = var.alb_listener_arn
-    }
-    */
+
     environment_variable {
       name  = "REACT_APP_BACKEND_URL"
       value = var.backend_appname

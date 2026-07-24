@@ -106,10 +106,7 @@ module "frontend_pipeline" {
   ecr_repository_url        = module.ecr.frontend_repository_url
   codestar_connection_arn   = var.codestar_connection_arn
   cluster_name              = module.eks.cluster_name
-  #alb_listener_arn                 = module.alb.frontend_https_listener_arn
-  #frontend_blue_target_group_name  = module.alb.frontend_blue_target_group_name
-  #frontend_green_target_group_name = module.alb.frontend_green_target_group_name
-  #alb_dns_name                     = module.alb.alb_dns_name
+
 }
 
 module "backend_pipeline" {
@@ -133,8 +130,4 @@ module "backend_pipeline" {
   aws_region               = var.aws_region
   alb_controller_role_arn  = module.alb.alb_controller_role_arn
   backend_target_group_arn = module.alb.backend_target_group_arn
-
-  #alb_listener_arn                = module.alb.frontend_https_listener_arn
-  #backend_blue_target_group_name  = module.alb.backend_blue_target_group_name
-  #backend_green_target_group_name = module.alb.backend_green_target_group_name
 }

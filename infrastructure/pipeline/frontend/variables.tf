@@ -75,22 +75,3 @@ variable "frontend_target_group_arn" {
   description = "The ARN of the frontend Target Group"
   type        = string
 }
-/*
-variable "frontend_blue_target_group_name" {
-  description = "Name of blue target group for frontend"
-  type        = string
-}
-
-variable "frontend_green_target_group_name" {
-  description = "NAME of green target group for frontend"
-  type        = string
-}
-variable "alb_listener_arn" {
-  description = "ARN of the ALB listener"
-  type        = string
-}
-variable "alb_dns_name" {
-  description = "DNS name of the ALB"
-  type        = string
-}
-*/

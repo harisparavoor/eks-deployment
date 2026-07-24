@@ -85,16 +85,6 @@ variable "github_webhook_token" {
   type        = string
   sensitive   = true
 }
-/*variable "logs_bucket_name" {
-  description = "S3 bucket for ALB access logs"
-  type        = string
-}
-
-variable "alb_logs_policy" {
-  description = "Reference to the S3 bucket policy resource"
-  type        = any
-}
-*/
 
 variable "codestar_connection_arn" {
   description = "The ARN of the CodeStar connection"

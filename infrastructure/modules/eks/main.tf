@@ -1,5 +1,4 @@
 # eks.tf
-
 resource "aws_eks_cluster" "main" {
   name     = "${var.project_name}-${var.environment}-eks"
   role_arn = aws_iam_role.cluster.arn
@@ -29,25 +28,6 @@ resource "aws_eks_cluster" "main" {
     aws_iam_role_policy_attachment.cluster_AmazonEKSVPCResourceController,
   ]
 }
-/*
-resource "aws_launch_template" "main" {
-  name_prefix = "${var.project_name}-${var.environment}-ng-"
-
-  network_interfaces {
-    security_groups = [var.eks_security_group_id, var.alb_to_pods_security_group_id]
-  }
-
-  tag_specifications {
-    resource_type = "instance"
-    tags = {
-      Name        = "${var.project_name}-${var.environment}-ng"
-      Environment = var.environment
-      Project     = var.project_name
-      ManagedBy   = "Terraform"
-    }
-  }
-}
-*/
 
 resource "aws_eks_node_group" "main" {
   cluster_name    = aws_eks_cluster.main.name
@@ -68,13 +48,6 @@ resource "aws_eks_node_group" "main" {
 
   }
   instance_types = [var.node_instance_type]
-
-  /*launch_template {
-    id      = aws_launch_template.main.id
-    version = aws_launch_template.main.latest_version
-  }*/
-
-
 
   update_config {
     max_unavailable = 1

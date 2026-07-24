@@ -90,18 +90,3 @@ variable "alb_controller_role_arn" {
   description = "The ARN of the ALB controller role"
   type        = string
 }
-/*
-variable "backend_blue_target_group_name" {
-  description = "Name of blue target group for backend"
-  type        = string
-}
-
-variable "backend_green_target_group_name" {
-  description = "NAME of green target group for backend"
-  type        = string
-}
-variable "alb_listener_arn" {
-  description = "ARN of the ALB listener"
-  type        = string
-}
-*/

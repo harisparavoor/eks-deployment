@@ -128,21 +128,7 @@ resource "aws_codebuild_project" "backend_build" {
       name  = "ENVIRONMENT"
       value = var.environment
     }
-    /*
-    environment_variable {
-      name  = "backend_blue_target_group_name"
-      value = var.backend_blue_target_group_name
-    }
-    */
-    /*
-    environment_variable {
-      name  = "backend_green_target_group_name"
-      value = var.backend_green_target_group_name
-    }
-    environment_variable {
-      name  = "alb_listener_arn"
-      value = var.alb_listener_arn
-    }*/
+
   }
 
   source {

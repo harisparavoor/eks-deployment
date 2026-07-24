@@ -38,8 +38,8 @@ resource "tls_self_signed_cert" "apptest_com" {
   private_key_pem = tls_private_key.apptest_com.private_key_pem
 
   subject {
-    common_name  = "apptest.com"
-    organization = "Test Org"
+    common_name  = "useyou.in"
+    organization = "useyou.org"
   }
 
   validity_period_hours = 720 # 30 days
