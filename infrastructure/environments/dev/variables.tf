@@ -88,3 +88,8 @@ variable "codestar_connection_arn" {
   description = "The ARN of the CodeStar connection"
   type        = string
 }
+
+variable "statefile_bucket" {
+  description = "S3 bucket name for storing Terraform state files"
+  type        = string
+}
